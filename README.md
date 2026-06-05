@@ -1,6 +1,10 @@
 # expense-tracker
-Simple expense tracker from roadmap.sh. Writing at the beginner level.
 
+simple expense-tracker from roadmap.sh: https://roadmap.sh/projects/expense-tracker
 
-Download the file and execute in terminal. First, must download library with
-pip3 install questionary
+Includes many functionalities
+
+To run the file:
+1. Clone the repository
+2. In terminal, run "pip3 install questionary"
+3. Run the file
