@@ -43,6 +43,31 @@ def get_monthly_spend(mon):
             total += item["cost"] 
     return total
 
+def get_yearly_spend(year):
+    total = 0
+    expenses = load_expenses_file()
+    for item in expenses:
+        item_year = str(item["date"][6:8])
+        if item_year == year:
+            total += item["cost"]
+    return total
+
+def get_earliest_year():
+    expenses = load_expenses_file()
+    earliest_year = 99
+    for items in expenses:
+        if items["date"][6:8] < earliest_year:
+            earliest_year = items["date"][6:8]
+    return earliest_year
+
+def get_latest_year():
+    expenses = load_expenses_file()
+    latest_year = 0
+    for items in expenses:
+        if items["date"][6:8] > latest_year:
+            latest_year = items["date"][6:8]
+    return latest_year
+
 def monthly_summary(mon):
     budget_file = load_budget()
     monthly_budget = budget_file["Monthly_budget"]
@@ -60,10 +85,87 @@ def monthly_summary(mon):
         else:
             progress_bar += ("░░")
     print(progress_bar,"\n")
+    expenses = load_expenses_file()
+    print("----------------+----------------+----------------+------------------------+----------------")
+    print(f"ID              |item            |cost            |category                |date            ")
+    print("----------------+----------------+----------------+------------------------+----------------")
+    for item in expenses:
+        if item["date"][0:2] == mon:
+            print(f"{item["ID"]:<16}|{item["expense"]:<16}|{item["cost"]:<16}|{item["category"]:<24}|{item["date"]:<16}")
+
+    HnU_spend = 0
+    FnG_spend = 0
+    TP_spend = 0
+    InD_spend = 0
+    LnE_spend = 0
+
+    for item in expenses:
+        if item["category"] == "Housing & Utilities" and item["date"][0:2] == mon:
+            HnU_spend += item["cost"]
+        elif item["category"] == "Food & Groceries" and item["date"][0:2] == mon:
+            FnG_spend += item["cost"]
+        elif item["category"] == "Transportation" and item["date"][0:2] == mon:
+            TP_spend += item["cost"]
+        elif item["category"] == "Insurance & Debt" and item["date"][0:2] == mon:
+            InD_spend += item["cost"]
+        elif item["category"] == "Lifestyle & Entertainment" and item["date"][0:2] == mon:
+            LnE_spend += item["cost"]
+        total_spend = HnU_spend+FnG_spend+TP_spend+InD_spend+LnE_spend
+    print(f"\nHousing & Utilities         : ", HnU_spend,f"\nFood & Groceries            : ", FnG_spend, f"\nTransportation              : ",TP_spend, f"\nInsurance & Debt            : ", InD_spend, f"\nLifestyle & Entertainment   : ", LnE_spend,"\n")
+
+
+
+
+def yearly_summary(year):
+    budget_file = load_budget()
+    yearly_budget = budget_file["Yearly_budget"]
+        
+    total_spend = get_yearly_spend(year)
+    print("Total spend: ", total_spend, "\n")
+    total_spend_proportion = math.floor(total_spend/yearly_budget * 10)
+    progress_bar = ""   
+
+    if total_spend_proportion >= 10:
+        print("WARNING! YOU HAVE EXCEEDED YOUR MONTHLY BUDGET!")
+    for i in range(10):
+        if i < total_spend_proportion:
+            progress_bar += ("██")
+        else:
+            progress_bar += ("░░")
+    print(progress_bar,"\n")
+    expenses = load_expenses_file()
+    print("----------------+----------------+----------------+------------------------+----------------")
+    print(f"ID              |item            |cost            |category                |date            ")
+    print("----------------+----------------+----------------+------------------------+----------------")
+    for item in expenses:
+        if item["date"][6:8] == year:
+            print(f"{item["ID"]:<16}|{item["expense"]:<16}|{item["cost"]:<16}|{item["category"]:<24}|{item["date"]:<16}")
+
+    HnU_spend = 0
+    FnG_spend = 0
+    TP_spend = 0
+    InD_spend = 0
+    LnE_spend = 0
+
+    for item in expenses:
+        if item["category"] == "Housing & Utilities" and item["date"][6:8] == year:
+            HnU_spend += item["cost"]
+        elif item["category"] == "Food & Groceries" and item["date"][6:8] == year:
+            FnG_spend += item["cost"]
+        elif item["category"] == "Transportation" and item["date"][6:8] == year:
+            TP_spend += item["cost"]
+        elif item["category"] == "Insurance & Debt" and item["date"][6:8] == year:
+            InD_spend += item["cost"]
+        elif item["category"] == "Lifestyle & Entertainment" and item["date"][6:8] == year:
+            LnE_spend += item["cost"]
+        total_spend = HnU_spend+FnG_spend+TP_spend+InD_spend+LnE_spend
+    print(f"\nHousing & Utilities         : ", HnU_spend,f"\nFood & Groceries            : ", FnG_spend, f"\nTransportation              : ",TP_spend, f"\nInsurance & Debt            : ", InD_spend, f"\nLifestyle & Entertainment   : ", LnE_spend,"\n")
+
+
 
 while True:
 
-    decision = questionary.select("What would you like to do?", choices = ["Add Expense","View Expenses","Delete Expense","Exit","Summarise Spending","Set Budgets"]).ask()
+    decision = questionary.select("What would you like to do?", choices = ["Add Expense","View Expenses","Delete Expense","Summarise Spending","Set Budgets","Exit"]).ask()
     expenses = load_expenses_file()
     item_count = len(expenses)
 
@@ -97,14 +199,56 @@ while True:
             print(f"{log["ID"]:<16}|{log["expense"]:<16}|{log["cost"]:<16}|{log["category"]:<24}|{log["date"]:<16}")
         
         # add further menu that asks whether theres any specific item they'd like to view, and then provide description for that item
-        decision = questionary.select("Is there a specific log you'd like to view?", choices = ["Yes","No"]).ask()
-        if (decision == "Yes"):
+        decision = questionary.select("Further action?", choices = ["View specific log","Return to Menu","Filter by category"]).ask()
+        if (decision == "View specific log"):
             choices = [Choice(title=f"{item["ID"]:<16} {item["expense"]:<16}") for i, item in enumerate(expenses)]
             decision = questionary.select("Which log would you like to view?",choices=choices).ask()
             for item in expenses:
                 if f"{item["ID"]:<16} {item["expense"]:<16}" == decision:
                     print(f"{item["ID"]:<16}|{item["expense"]:<16}|{item["cost"]:<16}|{item["category"]:<24}|{item["date"]:<16}\n")
                     print(f"{item["description"]}\n")
+                    decision = questionary.select("Would you like to edit this log?", choices=["Edit","Return"]).ask()
+                    if decision == "Edit":
+                        print(f"{item["ID"]:<16}|{item["expense"]:<16}|{item["cost"]:<16}|{item["category"]:<24}")
+                        print(f"{item["description"]}")
+                        decision = questionary.select("What would you like to edit?",choices = ["expense","cost","description","category"]).ask()
+                        if decision == "expense":
+                            item["expense"] = input("Enter updated expense\n")
+                        elif decision == "cost":
+                            item["cost"] = float(input("Enter updated cost\n"))
+                        elif decision == "description":
+                            item["description"] = input("Enter new description\n")
+                        elif decision == "category":
+                            decision = questionary.select("Please select a new category: ",choices = ["Housing & Utilities","Food & Groceries","Transportation","Insurance & Debt","Lifestyle & Entertainment"]).ask()
+                            item["category"] = decision
+                        with open(expenses_file_path,"w") as exp:
+                            json.dump(expenses, exp)
+            
+
+            
+        elif (decision == "Filter by category"):
+            decision = questionary.select("Which category?", choices = ["Housing & Utilities","Food & Groceries","Transportation","Insurance & Debt","Lifestyle & Entertainment"]).ask()
+            match decision:
+                case "Housing & Utilities":
+                    for item in expenses:
+                        if item["category"] == "Housing & Utilities":
+                            print(f"{item["ID"]:<16}|{item["expense"]:<16}|{item["cost"]:<16}|{item["category"]:<24}|{item["date"]:<16}")
+                case "Food & Groceries":
+                    for item in expenses:
+                        if item["category"] == "Food & Groceries":
+                            print(f"{item["ID"]:<16}|{item["expense"]:<16}|{item["cost"]:<16}|{item["category"]:<24}|{item["date"]:<16}")
+                case "Transportation":
+                    for item in expenses:
+                        if item["category"] == "Transportation":
+                            print(f"{item["ID"]:<16}|{item["expense"]:<16}|{item["cost"]:<16}|{item["category"]:<24}|{item["date"]:<16}")
+                case "Insurance & Debt":
+                    for item in expenses:
+                        if item["category"] == "Insurance & Debt":
+                            print(f"{item["ID"]:<16}|{item["expense"]:<16}|{item["cost"]:<16}|{item["category"]:<24}|{item["date"]:<16}")
+                case "Lifestyle & Entertainment":
+                    for item in expenses:
+                        if item["category"] == "Lifestyle & Entertainment":
+                            print(f"{item["ID"]:<16}|{item["expense"]:<16}|{item["cost"]:<16}|{item["category"]:<24}|{item["date"]:<16}")
                 
 
 
@@ -142,7 +286,7 @@ while True:
 
     elif (decision == "Summarise Spending"):
 
-        decision = questionary.select("Would you like to sort by month, year, or overall?",choices=["Month","Year","Overall"]).ask()
+        decision = questionary.select("Would you like to sort by month, year, or lifetime?",choices=["Month","Year","Lifetime"]).ask()
         if decision == "Month":
             decision = questionary.select("Which month would you like to see?", choices = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]).ask()
             match decision:
@@ -170,9 +314,38 @@ while True:
                     monthly_summary("11")
                 case "Dec":
                     monthly_summary("12")
-    
+        elif (decision == "Year"):
+            years = sorted(set(item["date"][6:8] for item in expenses))
+            decision = questionary.select("Which year?",years).ask()
+            yearly_summary(decision)
 
-        expenses = load_expenses_file()
+        elif (decision == "Lifetime"):
+            total_spend = 0
+
+            for item in expenses:
+                total_spend += item["cost"]
+
+            HnU_spend = 0
+            FnG_spend = 0
+            TP_spend = 0
+            InD_spend = 0
+            LnE_spend = 0
+
+            for item in expenses:
+                if item["category"] == "Housing & Utilities":
+                    HnU_spend += item["cost"]
+                elif item["category"] == "Food & Groceries":
+                    FnG_spend += item["cost"]
+                elif item["category"] == "Transportation":
+                    TP_spend += item["cost"]
+                elif item["category"] == "Insurance & Debt":
+                    InD_spend += item["cost"]
+                elif item["category"] == "Lifestyle & Entertainment":
+                    LnE_spend += item["cost"]
+                total_spend = HnU_spend+FnG_spend+TP_spend+InD_spend+LnE_spend
+            print(f"Housing & Utilities         : ", HnU_spend,f"\nFood & Groceries            : ", FnG_spend, f"\nTransportation              : ",TP_spend, f"\nInsurance & Debt            : ", InD_spend, f"\nLifestyle & Entertainment   : ", LnE_spend,"\n")
+            print("Total Spend: ", total_spend)
+
 
         # "Housing & Utilities","Food & Groceries","Transportation","Insurance & Debt","Lifestyle & Entertainment"
 
