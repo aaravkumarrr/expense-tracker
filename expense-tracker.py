@@ -34,9 +34,10 @@ while True:
         item = input("What did you purchase?\n")
         cost = float(input("How much did it cost?\n"))
         category = questionary.select("Which category is this a part of?", choices = ["Housing & Utilities","Food & Groceries","Transportation","Insurance & Debt","Lifestyle & Entertainment"]).ask()
+        description = input("Please enter a description for the item\n")
 
         expenses = load_expenses_file()
-        expenses.append({"ID":item_count+1,"expense":item, "cost":cost, "category":category})
+        expenses.append({"ID":item_count+1,"expense":item, "cost":cost, "category":category, "description":description})
 
 
         with open(file_path, "w") as exp:
@@ -54,7 +55,15 @@ while True:
             print(f"{log["ID"]:<16}|{log["expense"]:<16}|{log["cost"]:<16}|{log["category"]:<24}")
         
         # add further menu that asks whether theres any specific item they'd like to view, and then provide description for that item
-        # add primary ID key that updates automatically and reassigns based on deletion of items. 
+        decision = questionary.select("Is there a specific log you'd like to view?", choices = ["Yes","No"]).ask()
+        if (decision == "Yes"):
+            choices = [Choice(title=f"{item["ID"]:<16} {item["expense"]:<16}") for i, item in enumerate(expenses)]
+            decision = questionary.select("Which log would you like to view?",choices=choices).ask()
+            for item in expenses:
+                if f"{item["ID"]:<16} {item["expense"]:<16}" == decision:
+                    print(f"{log["ID"]:<16}|{log["expense"]:<16}|{log["cost"]:<16}|{log["category"]:<24}\n")
+                    print(f"{log["description"]}\n")
+                
 
 
 
